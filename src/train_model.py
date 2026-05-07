@@ -1,54 +1,56 @@
-# Import pandas → to read and handle CSV data
+# Import pandas for data handling
 import pandas as pd
 
-# Import LinearRegression model from sklearn
-# This is a simple ML algorithm used for prediction
+# Import sqlite3 to read data from SQLite database
+import sqlite3
+
+# Import LinearRegression model
 from sklearn.linear_model import LinearRegression
 
+# Import pickle to save trained model
+import pickle
 
-# Step 1: Load the collected data from CSV file
-df = pd.read_csv("data/live_data.csv")
+
+# Step 1: Connect to SQLite database
+conn = sqlite3.connect("data/weather_data.db")
 
 
-# Step 2: Select input features (X)
-# These are the variables used to make predictions
+# Step 2: Read data from DB table
+df = pd.read_sql_query("SELECT * FROM weather_data", conn)
+
+
+# Step 3: Close DB connection
+conn.close()
+
+
+# Step 4: Convert timestamp to datetime
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+
+# Step 5: Sort data by timestamp
+df = df.sort_values("timestamp")
+
+
+# Step 6: Select input features
 X = df[["temperature", "hour", "day_of_week", "is_weekend"]]
 
 
-# Step 3: Define target variable (y)
-# This is what we want to predict
-# For now, we are simulating energy demand using temperature
-y = df["temperature"] * 2   # placeholder logic
+# Step 7: Create temporary target
+# Later we replace this with real energy demand
+y = df["temperature"] * 2
 
 
-# Step 4: Create the ML model
+# Step 8: Create model
 model = LinearRegression()
 
 
-# Step 5: Train the model using X (inputs) and y (output)
-# Model learns relationship between inputs and output
+# Step 9: Train model
 model.fit(X, y)
 
 
-# Step 6: Take latest row of data for testing
-latest_data = X.tail(1)
-
-
-# Step 7: Make prediction using trained model
-prediction = model.predict(latest_data)
-
-
-# Step 8: Print input data used for prediction
-print("Latest input data:")
-print(latest_data)
-
-
-# Step 9: Print predicted result
-print("Predicted energy demand:")
-print(prediction[0])
-
-import pickle
-
-# Save trained model to file
+# Step 10: Save trained model
 with open("models/model.pkl", "wb") as f:
     pickle.dump(model, f)
+
+
+print("Model trained using DB data and saved successfully.")
